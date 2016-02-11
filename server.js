@@ -54,7 +54,7 @@ var act = {
 }
 
 wss.on("connection", function(ws) {
-  ws.id = ws.fd;
+  ws.id = ws._socket._handle.fd;
   console.log("connected!", ws._socket._handle.fd);
 
   ws.addListener("message", function(message){
