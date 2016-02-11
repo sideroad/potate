@@ -62,7 +62,9 @@ wss.on("connection", function(ws) {
   ws.addListener("message", function(message){
       var msg = JSON.parse(message);
       console.log(ws.id, msg);
-      act[msg.act](ws, ws.id, msg);
+      wss.clients.each(function(ws){
+        act[msg.act](ws, ws.id, msg);        
+      })
   });
   ws.addListener("close", function(){
 //		console.log("connection closed:"+arguments);

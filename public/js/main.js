@@ -14,8 +14,8 @@ window.onload = function() {
 	        7: { right: 1, up:0, left: 0, down: 1 }
 		},
 		players = {};
-	
-	
+
+
     (function(){
 		var ws = window.WebSocket || window.MozWebsocket;
 		if(!ws) {
@@ -23,7 +23,7 @@ window.onload = function() {
 			return;
 		}
         s = new ws("ws://"+location.host);
-		
+
 		var act = {
 			init : function( data ){
 				$("#stageId").text(data.stage);
@@ -44,42 +44,42 @@ window.onload = function() {
 
 				player.sprite.setX(game_width / 2);
 				player.sprite.setY(game_height / 2);
-				
+
 				players[ player.id ] = player;
-                $("#overlay").remove();
+        $("#overlay").remove();
 			},
 			//joypad
 			jp : function( data ){
                 var input = keyMap[data.ang] || {right:0,up:0,left:0,down:0};
-				
+
 				input.a = data.a;
-				input.b = data.b;	
+				input.b = data.b;
                 players[data.id].input = input;
 			}
 		};
-		
+
 	    s.onopen =  function(  ){
             console.log("connected!");
 			s.onmessage = function( msg ){
                 var data = JSON.parse(msg.data);
 				act[data.act](data);
 	        };
-			
+
 			s.send(JSON.stringify({act:"init"}));
-			
+
         };
-		
+
         s.onclose = function(){
             console.log(arguments);
         }
 	})();
-	
+
     var game_height = window.innerHeight;
     var game_width = window.innerWidth;
     var scene = sjs.Scene({w:game_width, h:game_height, autoPause : false });
 
     var plates = [];
-	
+
 	var stage = scene.Layer("stage", {
 		useCanvas : true
 		// useWebGL : true
@@ -95,7 +95,7 @@ window.onload = function() {
     floating.move( game_width / 4, game_height - 250);
     floating.setW( game_width - ( game_width / 2));
     plates.push(floating);
-	
+
 	function render( player ){
         var sprite = player.sprite;
         var input = player.input;
@@ -103,7 +103,7 @@ window.onload = function() {
         var xv = player.xv;
 		var yv = player.yv;
 		var property = player.property;
-		
+
         var contactX = sprite.x + sprite.w/2;
         var contactY = sprite.y + sprite.h;
         var has_contact;
@@ -111,7 +111,7 @@ window.onload = function() {
         var i;
         var platesLength = plates.length;
 
- 
+
         // Plate collision
         for(i=0; i < platesLength; i++) {
             plate = plates[i];
@@ -124,7 +124,7 @@ window.onload = function() {
         }
 
 
-        // Jump 
+        // Jump
         if(input.up) {
             if(has_contact) {
                 yv = -property.JUMP;
@@ -136,7 +136,7 @@ window.onload = function() {
         }
         yv = yv + property.JUMP/25;
         if(yv>=0 && has_contact){
-            yv = 0;	
+            yv = 0;
 		}
 
         // Horizontal process
@@ -158,12 +158,12 @@ window.onload = function() {
 
 
         sprite.move(xv, yv);
-		
+
         player.xv = xv;
         player.yv = yv;
-		
+
         sprite.update();
-		
+
 		var key = ""+input.right+input.up+input.left+input.down+input.a+input.b;
 		if(player.before == key ) {
             cycle.next();
@@ -172,14 +172,14 @@ window.onload = function() {
             player.cycle = cycle;
             cycle.addSprite(sprite);
 		}
-		
+
 		player.before = key;
-		
+
 	}
 
     function paint() {
         var i, id, plate, platesLength = plates.length;
-		
+
 		for(id in players){
 			render( players[id]);
 		}
@@ -192,7 +192,7 @@ window.onload = function() {
 
     var ticker = scene.Ticker( paint, {useAnimationFrame:true});
     ticker.run();
-	
-	
+
+
 
 };
