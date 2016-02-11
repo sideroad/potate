@@ -65,7 +65,7 @@ wss.on("connection", function(ws) {
   ws.addListener("message", function(message){
       var msg = JSON.parse(message);
       console.log(ws.id, msg);
-      clients.each(function(ws){
+      clients.map(function(ws){
         act[msg.act](ws, ws.id, msg);
       });
   });
