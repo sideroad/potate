@@ -54,7 +54,8 @@ var act = {
 }
 
 wss.on("connection", function(ws) {
-  console.log("connected!", ws);
+  ws.id = ws.fd;
+  console.log("connected!", ws.id);
 
   ws.addListener("message", function(message){
       var msg = JSON.parse(message);
