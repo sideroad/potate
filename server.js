@@ -66,10 +66,14 @@ wss.on("connection", function(ws) {
       var msg = JSON.parse(message);
       console.log(ws.id, msg);
       clients.map(function(ws){
+        if(ws.id === null ) {
+          return;
+        }
         act[msg.act](ws, ws.id, msg);
       });
   });
   ws.addListener("close", function(){
-//		console.log("connection closed:"+arguments);
+    ws.id = null;
+		console.log("connection closed:"+arguments);
   });
 })
