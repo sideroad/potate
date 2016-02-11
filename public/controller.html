@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>JoyPad.js</title>
+		<meta name = "viewport" content = "width=device-width; initial-scale=1; maximum-scale=1; user-scalable=0;" >
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <link rel="stylesheet" href="css/basic.css" />
+        <script type="text/javascript" src="http://code.jquery.com/jquery.min.js" ></script>
+        <script type="text/javascript" src="js/socket.io.js" ></script>
+        <script type="text/javascript" src="js/joypad.js" ></script>
+	</head>
+	<body>
+		
+		<div id="joypad" >
+            <div id="ck" class="ck" >
+                <img src="img/cross-key.png"  >
+            </div>
+            <div id="a" class="button" >
+                <img src="img/A-button.png"  >
+            </div>
+            <div id="b" class="button" >
+                <img src="img/B-button.png"  >
+            </div>
+		</div>
+        <div id="test" ></div>
+		
+		<script type="text/javascript">
+			$(function(){
+				var id = new Date().getTime() + ":"+Math.floor( Math.random()*1000000 );
+				
+				var act = {
+			            attend : function( data ){
+			                var prev;
+	                        $("#joypad").joypad().bind("joypad",function( e, param ){
+								var ran = param.ck.ran;
+								if (ran && ran < 50) return;
+								
+								var data = JSON.stringify({
+	                                act : "jp",
+									ang : param.ck.ang,
+									a : param.a,
+									b : param.b
+	                            });
+								if(data == prev) return;
+								prev = data;
+	                            s.send( data );
+	                            $("#test").text( data );
+	                        });
+			            },
+			            reinput: function(){
+			            	intput();
+			            }
+			        },
+			        input = function(stageId){
+			        	s.send(JSON.stringify({
+							act: "attend",
+							id: stageId || window.prompt("input stage id")
+						}));
+			        };
+				
+				(function(){
+			        var ws = window.WebSocket || window.MozWebsocket;
+			        if(!ws) {
+			            console.log("WebSocket is not defined");
+			            return;
+			        }
+
+                    s = new ws("ws://"+location.host);
+			        s.onopen= function(  ){
+			            console.log("connected!");
+						
+                        s.onmessage = function( msg ){
+                            var data = JSON.parse(msg.data);
+                            act[data.act](data);
+                            console.log(data);
+                        };
+						
+						input(location.hash.substr(1));
+						
+		                
+			        };
+					s.onclose = function(){
+						console.log("connection closed!");
+						act.attend({});
+					}
+			        
+			    })();
+				
+				$(window).bind("hashchange", function(){
+					input();
+				});
+				
+			});
+		</script>
+		
+	</body>
+</html>

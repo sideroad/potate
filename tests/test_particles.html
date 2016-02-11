@@ -1,0 +1,151 @@
+<!DOCTYPE html><html>
+<head>
+<title>Particle sprite load test</title>
+<meta name = "viewport" content = "user-scalable=no, width=device-width">
+
+    <script type="text/javascript" src="../lib/glMatrix.js"></script>
+    <script type="text/javascript" src="../lib/webgl-utils.js"></script>
+    <script type="text/javascript" src="../lib/webgl.js"></script>
+    <script src="../sprite.js"></script>
+
+    <style>.sjs{border:2px #999 solid;}</style>
+
+    <script id="shader-vs" type="x-shader/x-vertex"> 
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+
+        varying vec2 vTextureCoord;
+
+        void main(void) {
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+            vTextureCoord = aTextureCoord;
+        }
+    </script> 
+
+    <script id="shader-fs" type="x-shader/x-fragment"> 
+        #ifdef GL_ES
+            precision highp float;
+        #endif
+
+        varying vec2 vTextureCoord;
+
+        uniform sampler2D uSampler;
+
+        void main(void) {
+            gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+        }
+    </script> 
+
+</head>
+<body style="overflow:hidden">
+
+<p>This demo is gonna produce particles and stop when 2000 particules 
+are on the screen or 50% percent javascript load is reached . <a href="https://github.com/batiste/sprite.js">Get the source</a>.<br>
+<label><input type="checkbox" checked id="useImage" />Use image for particle</label>
+<label><input type="checkbox" id="useRequestAnimation" />Use request animation frame 
+<a href="https://developer.mozilla.org/en/DOM/window.mozRequestAnimationFrame">ref</a></label>
+<br><span id="nb"></span> particles, system load <span id="load"></span>% 
+(<span id="fps"></span>FPS) 
+(<span id="dropped"></span> dropped frames) 
+<br><a href="?canvas=1" id="canvas-mode">Use canvas engine.</a> 
+<a href="?html=1" id="html-mode">Use HTML engine</a>
+<a href="?webgl=1" id="webgl-mode">Use WebGL engine (experimental)</a>
+</p>
+</body>
+
+<script>
+
+window.onload = function() {
+
+//netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+
+
+    var l = document.getElementById('load');
+    var nb = document.getElementById('nb');
+    var fps = document.getElementById('fps');
+    var dropped = document.getElementById('dropped');
+    var scene = sjs.Scene({w:window.innerWidth-20, h:window.innerHeight-120});
+
+    var use = document.getElementById('useImage');
+    var useImage = true;
+    use.onclick = function() {
+        useImage = use.checked;
+    }
+    
+    var req = document.getElementById('useRequestAnimation');
+    var useReq = false;
+    req.onclick = function() {
+        useReq = req.checked;
+        ticker.useAnimationFrame = useReq;
+    }
+    if(!sjs.animationFrame)
+        req.disabled = "disabled";
+    
+    var canvas = window.location.href.indexOf('canvas') != -1;
+    var webgl = window.location.href.indexOf('webgl') != -1;
+
+    if(canvas) {
+        document.getElementById('canvas-mode').style.display = 'none';
+        var layer = scene.Layer("layer", {useCanvas:true});
+    } else if(webgl) {
+        document.getElementById('webgl-mode').style.display = 'none';
+        var layer = scene.Layer("layer", {useWebGL:true});
+    } else {
+        document.getElementById('html-mode').style.display = 'none';
+        var layer = scene.Layer("layer", {useCanvas:false});
+    }
+        
+
+    var particles = sjs.SpriteList();
+
+    function createParticle() {
+        if(useImage)
+            var particle = scene.Sprite('img/particule.png', {layer:layer});
+        else
+            var particle = scene.Sprite(false, {color:'#0b0', w:32, h:32, layer:layer});
+
+        particle.setX(scene.w / 2);
+        particle.setY(scene.h / 3);
+        particle.xv = (Math.random() - 0.5) * 2;
+        particle.yv = (Math.random() - 1) * 2;
+        particles.add(particle);
+    }
+
+    function paint() {
+
+        if(ticker.load < 50 && particles.length < 2000) {
+            createParticle();
+            createParticle();
+            createParticle();
+            createParticle();
+            createParticle();
+        }
+
+        var particle;
+        while(particle = particles.iterate()) {
+            particle.yv += 0.003;
+            particle.move(particle.xv, particle.yv);
+            if(particle.y > window.innerHeight) {
+                particles.remove(particle)
+                particle.remove();
+            } else {
+                particle.update();
+            }
+        }
+        if(ticker.currentTick % 30 == 0) {
+            l.innerHTML = ticker.load;
+            nb.innerHTML = particles.list.length;
+            fps.innerHTML = ticker.fps;
+            dropped.innerHTML = ticker.droppedFrames;
+        }
+
+    };
+    var ticker = scene.Ticker(paint);
+    ticker.run();
+
+};
+</script>
+</html>
