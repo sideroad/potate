@@ -3,7 +3,8 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     app = express(),
     http = require("http"),
-    port = process.env.PORT || 5000;
+    port = process.env.PORT || 5000,
+    connectionId = 0;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -54,7 +55,8 @@ var act = {
 }
 
 wss.on("connection", function(ws) {
-  ws.id = ws._socket._handle.fd;
+  ws.id = connectionId;
+  connectionId++;
   console.log("connected!", arguments);
 
   ws.addListener("message", function(message){
